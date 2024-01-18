@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { InjectModel } from "@nestjs/mongoose";
+import { User } from "./schema/user.schema";
+import mongoose, { Model } from "mongoose";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+
+  async create(createUserDto: CreateUserDto) {
+    const { firstname, lastname, password, role } = createUserDto;
+    const hashedpassword = await bcrypt.hash(password, 10);
+    const usercreation = await this.userModel.create({
+      firstname,
+      lastname,
+      password: hashedpassword,
+      role,
+    });
+    if (!usercreation) {
+      throw new BadRequestException(`Invalid Details`);
+    }
+    return usercreation;
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll(): Promise<User[]> {
+    return await this.userModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: mongoose.Types.ObjectId) {
+    return await this.userModel.findById(id);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: mongoose.Types.ObjectId, updateUserDto: UpdateUserDto) {
+    return await this.userModel.findByIdAndUpdate(id, updateUserDto, {
+      new: true,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: mongoose.Types.ObjectId) {
+    const deleteuser = await this.userModel.findByIdAndDelete(id);
+    return { message: `User Deleted` };
   }
 }
