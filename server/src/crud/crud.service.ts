@@ -1,26 +1,34 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCrudDto } from './dto/create-crud.dto';
-import { UpdateCrudDto } from './dto/update-crud.dto';
+import { Injectable } from "@nestjs/common";
+import { CreateCrudDto } from "./dto/create-crud.dto";
+import { UpdateCrudDto } from "./dto/update-crud.dto";
+import { InjectModel } from "@nestjs/mongoose";
+import { TODO } from "./schema/todo.schema";
+import mongoose, { Model } from "mongoose";
 
 @Injectable()
 export class CrudService {
-  create(createCrudDto: CreateCrudDto) {
-    return 'This action adds a new crud';
+  constructor(@InjectModel(TODO.name) private TODOModel: Model<TODO>) {}
+
+  async create(createCrudDto: CreateCrudDto) {
+    return await this.TODOModel.create(createCrudDto);
   }
 
-  findAll() {
-    return `This action returns all crud`;
+  async findAll() {
+    return await this.TODOModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} crud`;
+  async findOne(id: mongoose.Types.ObjectId) {
+    return await this.TODOModel.findById(id);
   }
 
-  update(id: number, updateCrudDto: UpdateCrudDto) {
-    return `This action updates a #${id} crud`;
+  async update(id: mongoose.Types.ObjectId, updateCrudDto: UpdateCrudDto) {
+    return await this.TODOModel.findByIdAndUpdate(id, updateCrudDto, {
+      new: true,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} crud`;
+  async remove(id: mongoose.Types.ObjectId) {
+    const removee = await this.TODOModel.findByIdAndDelete(id);
+    return { message: `Task Deleted` };
   }
 }
