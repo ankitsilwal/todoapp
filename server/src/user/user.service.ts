@@ -11,12 +11,13 @@ export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { firstname, lastname, password, role } = createUserDto;
+    const { firstname, lastname, password,emaill, role } = createUserDto;
     const hashedpassword = await bcrypt.hash(password, 10);
     const usercreation = await this.userModel.create({
       firstname,
       lastname,
       password: hashedpassword,
+      emaill,
       role,
     });
     if (!usercreation) {
